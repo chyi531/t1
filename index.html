@@ -63,10 +63,10 @@ body{background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;pad
 .copt{cursor:pointer;padding:7px;border-radius:8px;font-size:20px;text-align:center;touch-action:manipulation;}
 .clbl{font-size:9px;color:#888;display:block;margin-top:1px;}
 .ibody{flex:1;min-width:0;}
-.irow{display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;}
-.ilbl{font-size:11px;color:#aaa;min-width:36px;flex-shrink:0;padding-top:5px;}
-.iin{flex:1;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;word-wrap:break-word;line-height:1.5;width:100%;}
-.iin:focus{background:#f7f7f7;}
+.irow{display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;width:100%;}
+.ilbl{font-size:11px;color:#aaa;min-width:36px;width:36px;flex-shrink:0;padding-top:5px;}
+.iin{flex:1;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;line-height:1.6;border:1px solid transparent;width:100%;min-width:0;word-wrap:break-word;word-break:break-all;overflow-wrap:break-word;white-space:pre-wrap;resize:none;font-family:inherit;overflow:hidden;}
+.iin:focus{background:#f7f7f7;border-color:#e0e0e0;}
 .iin::placeholder{color:#ccc;}
 .iamt-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:.5px solid #f0f0f0;}
 .iamt-lbl{font-size:12px;color:#aaa;flex:1;}
@@ -81,7 +81,7 @@ body{background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;pad
 .exrow{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;}
 .exrow:last-child{margin-bottom:0;}
 .exlbl{font-size:11px;color:#888;min-width:60px;flex-shrink:0;padding-top:10px;}
-.exin{flex:1;font-size:13px;color:#222;background:#fff;border:1px solid #e8e8e8;outline:none;padding:8px 10px;border-radius:8px;width:100%;word-wrap:break-word;line-height:1.5;}
+.exin{flex:1;font-size:13px;color:#222;background:#fff;border:1px solid #e8e8e8;outline:none;padding:8px 10px;border-radius:8px;width:100%;word-wrap:break-word;word-break:break-all;overflow-wrap:break-word;line-height:1.5;white-space:normal;}
 .exin:focus{border-color:#4285f4;}
 .exin::placeholder{color:#ccc;}
 .mrow{display:flex;gap:6px;}
@@ -126,7 +126,7 @@ body{background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;pad
 .fbox{width:26px;height:26px;min-width:26px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;color:transparent;touch-action:manipulation;}
 .fitem.on .fbox{background:#27ae60;border-color:#27ae60;color:#fff;}
 .fbody{flex:1;min-width:0;padding:12px 0;}
-.fn{display:block;width:100%;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;word-wrap:break-word;line-height:1.5;}
+.fn{display:block;width:100%;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;word-wrap:break-word;word-break:break-all;overflow-wrap:break-word;line-height:1.5;white-space:normal;}
 .fn:focus{background:#f7f7f7;}
 .fn::placeholder{color:#ccc;}
 .ffrow{display:flex;align-items:center;gap:6px;margin-top:6px;}
@@ -400,8 +400,11 @@ function mkItem(o){
   [['行程',o.name||'','景點/行程名稱'],['特色',o.desc||'','備註/特色'],['時間',o.time||'','例：09:30']].forEach(function(r){
     var rw=document.createElement('div');rw.className='irow';
     var lb=document.createElement('div');lb.className='ilbl';lb.textContent=r[0];
-    var ip=document.createElement('input');ip.className='iin';ip.value=r[1];ip.placeholder=r[2];
-    ip.addEventListener('input',save);
+    var ip=document.createElement('textarea');ip.className='iin';ip.value=r[1];ip.placeholder=r[2];
+    ip.rows=1;
+    ip.style.cssText='overflow:hidden;resize:none;';
+    ip.addEventListener('input',function(){save();this.style.height='auto';this.style.height=this.scrollHeight+'px';});
+    setTimeout(function(){ip.style.height='auto';ip.style.height=ip.scrollHeight+'px';},0);
     rw.appendChild(lb);rw.appendChild(ip);bd.appendChild(rw);
   });
   // 費用
