@@ -53,8 +53,8 @@ body{background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;pad
 .ddot{width:5px;height:5px;border-radius:50%;background:transparent;margin-top:2px;}
 .dchip.on .ddot{background:#7cb9f4;}
 /* 行程項目 */
-.iitem{border-bottom:.5px solid #f0f0f0;padding:12px 16px;}
-.itop{display:flex;gap:10px;align-items:flex-start;}
+.iitem{border-bottom:.5px solid #f0f0f0;padding:12px 16px;overflow:hidden;}
+.itop{display:flex;gap:10px;align-items:flex-start;width:100%;overflow:hidden;}
 .icat{width:40px;height:40px;min-width:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;position:relative;flex-shrink:0;margin-top:2px;touch-action:manipulation;}
 .bh{background:#e8f0f8;}.bs{background:#e8f5e9;}.bf{background:#fff3e0;}
 .bc{background:#fce4ec;}.bt{background:#ede7f6;}.bo{background:#f0f0f0;}
@@ -62,11 +62,11 @@ body{background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;pad
 .cmenu.open{display:flex;}
 .copt{cursor:pointer;padding:7px;border-radius:8px;font-size:20px;text-align:center;touch-action:manipulation;}
 .clbl{font-size:9px;color:#888;display:block;margin-top:1px;}
-.ibody{flex:1;min-width:0;}
-.irow{display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;width:100%;}
-.ilbl{font-size:11px;color:#aaa;min-width:36px;width:36px;flex-shrink:0;padding-top:5px;}
-.iin{flex:1;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;line-height:1.6;border:1px solid transparent;width:100%;min-width:0;word-wrap:break-word;word-break:break-all;overflow-wrap:break-word;white-space:pre-wrap;resize:none;font-family:inherit;overflow:hidden;}
-.iin:focus{background:#f7f7f7;border-color:#e0e0e0;}
+.ibody{flex:1;min-width:0;overflow:hidden;}
+.irow{display:flex;align-items:flex-start;gap:6px;margin-bottom:4px;width:100%;}
+.ilbl{font-size:11px;color:#aaa;min-width:36px;width:36px;flex-shrink:0;padding-top:6px;}
+.iin{flex:1;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;line-height:1.5;border:1px solid transparent;width:100%;min-width:0;resize:none;overflow:hidden;font-family:inherit;min-height:32px;display:block;}
+.iin:focus{background:#f7f7f7;}
 .iin::placeholder{color:#ccc;}
 .iamt-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:.5px solid #f0f0f0;}
 .iamt-lbl{font-size:12px;color:#aaa;flex:1;}
@@ -401,10 +401,8 @@ function mkItem(o){
     var rw=document.createElement('div');rw.className='irow';
     var lb=document.createElement('div');lb.className='ilbl';lb.textContent=r[0];
     var ip=document.createElement('textarea');ip.className='iin';ip.value=r[1];ip.placeholder=r[2];
-    ip.rows=1;
-    ip.style.cssText='overflow:hidden;resize:none;';
-    ip.addEventListener('input',function(){save();this.style.height='auto';this.style.height=this.scrollHeight+'px';});
-    setTimeout(function(){ip.style.height='auto';ip.style.height=ip.scrollHeight+'px';},0);
+    ip.rows=2;
+    ip.addEventListener('input',function(){this.style.height='auto';this.style.height=this.scrollHeight+'px';save();});
     rw.appendChild(lb);rw.appendChild(ip);bd.appendChild(rw);
   });
   // 費用
