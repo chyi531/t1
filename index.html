@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>旅途記</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+input,button{font-family:inherit;font-size:inherit;-webkit-appearance:none;border-radius:0;}
+body{background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;padding:0;}
+.app{max-width:480px;width:100%;background:#fff;min-height:100vh;}
+@media(min-width:500px){body{padding:20px 0;}.app{border-radius:16px;min-height:0;box-shadow:0 4px 24px rgba(0,0,0,.15);}}
+.sbar{background:#1a1a2e;color:#fff;font-size:12px;padding:8px 16px;display:flex;justify-content:space-between;}
+.nhead{background:#1a1a2e;padding:14px 16px;}
+.ntitle{font-size:18px;font-weight:600;color:#fff;background:transparent;border:none;outline:none;width:100%;}
+.nsub{font-size:11px;color:rgba(255,255,255,.5);margin-top:4px;}
+/* 分頁 */
+.tbar{display:flex;background:#1a1a2e;}
+.tab{flex:1;padding:14px 4px 12px;text-align:center;font-size:11px;color:rgba(255,255,255,.45);border-bottom:3px solid transparent;display:flex;flex-direction:column;gap:4px;align-items:center;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation;}
+.tab.active{color:#7cb9f4;border-bottom-color:#7cb9f4;}
+.ti{font-size:20px;line-height:1;}
+/* 通用 */
+.page{display:none;}
+.page.show{display:block;}
+.sec{padding:14px 16px;}
+.sh{font-size:11px;font-weight:600;color:#888;letter-spacing:.5px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.card{background:#f7f7f7;border-radius:12px;padding:12px 14px;margin-bottom:12px;}
+.row{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:.5px solid rgba(0,0,0,.07);}
+.row:last-child{border-bottom:none;}
+.lbl{font-size:12px;color:#888;min-width:68px;flex-shrink:0;padding-top:4px;}
+.inp{flex:1;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:2px 4px;word-wrap:break-word;line-height:1.6;width:100%;}
+.inp:focus{background:#fff;border-radius:4px;}
+.inp::placeholder{color:#ccc;}
+.btn-link{font-size:13px;color:#4285f4;background:none;border:none;cursor:pointer;padding:0;touch-action:manipulation;}
+.btn-x{font-size:14px;color:#ccc;background:none;border:none;cursor:pointer;padding:4px 6px;touch-action:manipulation;}
+.add-btn{width:100%;padding:14px;border-radius:12px;font-size:14px;cursor:pointer;background:transparent;color:#333;border:.5px solid #ddd;margin-top:8px;touch-action:manipulation;}
+/* 日程 */
+.day-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 6px;}
+.day-hint{font-size:11px;color:#aaa;}
+.day-btns{display:flex;gap:8px;}
+.btn-green{font-size:13px;padding:8px 16px;border-radius:8px;border:1.5px solid #27ae60;color:#27ae60;background:#fff;cursor:pointer;font-weight:600;touch-action:manipulation;}
+.btn-red{font-size:13px;padding:8px 16px;border-radius:8px;border:1.5px solid #e74c3c;color:#e74c3c;background:#fff;cursor:pointer;touch-action:manipulation;}
+.dscroll{display:flex;gap:10px;padding:6px 16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.dscroll::-webkit-scrollbar{display:none;}
+.dchip{min-width:64px;width:64px;border-radius:14px;border:1.5px solid #e0e0e0;text-align:center;cursor:pointer;flex-shrink:0;background:#fff;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;gap:3px;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
+.dchip.on{background:#1a1a2e;border-color:#1a1a2e;}
+.dmon{font-size:11px;color:#aaa;}
+.dchip.on .dmon{color:rgba(124,185,244,.6);}
+.dday{font-size:22px;font-weight:700;color:#222;line-height:1.1;}
+.dchip.on .dday{color:#7cb9f4;}
+.dwk{font-size:11px;font-weight:600;color:#888;}
+.dchip.on .dwk{color:rgba(124,185,244,.85);}
+.ddot{width:5px;height:5px;border-radius:50%;background:transparent;margin-top:2px;}
+.dchip.on .ddot{background:#7cb9f4;}
+/* 行程項目 */
+.iitem{border-bottom:.5px solid #f0f0f0;padding:12px 16px;}
+.itop{display:flex;gap:10px;align-items:flex-start;}
+.icat{width:40px;height:40px;min-width:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;position:relative;flex-shrink:0;margin-top:2px;touch-action:manipulation;}
+.bh{background:#e8f0f8;}.bs{background:#e8f5e9;}.bf{background:#fff3e0;}
+.bc{background:#fce4ec;}.bt{background:#ede7f6;}.bo{background:#f0f0f0;}
+.cmenu{display:none;position:absolute;top:44px;left:0;background:#fff;border:1px solid #ddd;border-radius:12px;padding:8px;z-index:100;flex-wrap:wrap;gap:4px;width:210px;box-shadow:0 4px 20px rgba(0,0,0,.12);}
+.cmenu.open{display:flex;}
+.copt{cursor:pointer;padding:7px;border-radius:8px;font-size:20px;text-align:center;touch-action:manipulation;}
+.clbl{font-size:9px;color:#888;display:block;margin-top:1px;}
+.ibody{flex:1;min-width:0;}
+.irow{display:flex;align-items:flex-start;gap:6px;margin-bottom:6px;}
+.ilbl{font-size:11px;color:#aaa;min-width:36px;flex-shrink:0;padding-top:5px;}
+.iin{flex:1;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;word-wrap:break-word;line-height:1.5;width:100%;}
+.iin:focus{background:#f7f7f7;}
+.iin::placeholder{color:#ccc;}
+.iamt-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:.5px solid #f0f0f0;}
+.iamt-lbl{font-size:12px;color:#aaa;flex:1;}
+.iamt{font-size:15px;font-weight:600;color:#222;background:transparent;border:none;outline:none;text-align:right;width:100px;padding:2px 4px;}
+.iamt:focus{background:#f7f7f7;border-radius:4px;}
+.iamt::placeholder{color:#ccc;font-weight:400;font-size:12px;}
+.icur{font-size:12px;color:#aaa;}
+.idel{font-size:15px;color:#ddd;background:none;border:none;cursor:pointer;margin-top:2px;padding:4px;touch-action:manipulation;}
+.etog{font-size:12px;color:#4285f4;background:none;border:none;margin-top:8px;padding:4px 0;display:block;cursor:pointer;touch-action:manipulation;}
+.iexp{display:none;margin-top:8px;border-top:.5px solid #f0f0f0;padding-top:10px;}
+.iexp.open{display:block;}
+.exrow{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;}
+.exrow:last-child{margin-bottom:0;}
+.exlbl{font-size:11px;color:#888;min-width:60px;flex-shrink:0;padding-top:10px;}
+.exin{flex:1;font-size:13px;color:#222;background:#fff;border:1px solid #e8e8e8;outline:none;padding:8px 10px;border-radius:8px;width:100%;word-wrap:break-word;line-height:1.5;}
+.exin:focus{border-color:#4285f4;}
+.exin::placeholder{color:#ccc;}
+.mrow{display:flex;gap:6px;}
+.min{flex:1;font-size:13px;color:#222;background:#fff;border:1px solid #e8e8e8;outline:none;padding:8px 10px;border-radius:8px;}
+.min:focus{border-color:#4285f4;}
+.min::placeholder{color:#ccc;}
+.mbtn{font-size:12px;padding:8px 12px;border-radius:8px;border:none;background:#4285f4;color:#fff;cursor:pointer;white-space:nowrap;flex-shrink:0;touch-action:manipulation;}
+.mnote{font-size:10px;color:#aaa;margin-top:4px;}
+/* 費用 */
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.scard{background:#f7f7f7;border-radius:12px;padding:14px;}
+.slbl{font-size:11px;color:#888;margin-bottom:4px;}
+.sval{font-size:20px;font-weight:700;color:#222;}
+.ssub{font-size:11px;color:#aaa;margin-top:2px;}
+.rrow{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.rinp{font-size:14px;padding:8px 10px;border-radius:8px;border:1px solid #e0e0e0;background:#fff;color:#222;width:90px;outline:none;}
+.erow{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:.5px solid #f0f0f0;}
+.erow:last-child{border-bottom:none;}
+.ename{flex:1;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:2px 4px;word-wrap:break-word;}
+.ename:focus{background:#f7f7f7;border-radius:4px;}
+.ename::placeholder{color:#ccc;}
+.eamt{font-size:14px;font-weight:600;color:#222;background:transparent;border:none;outline:none;width:90px;text-align:right;padding:2px 4px;}
+.eamt:focus{background:#f7f7f7;border-radius:4px;}
+.eamt::placeholder{color:#ccc;font-weight:400;font-size:12px;}
+.sprow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:.5px solid #f0f0f0;}
+.sprow:last-child{border-bottom:none;}
+.avat{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;}
+.sn{flex:1;font-size:14px;background:transparent;border:none;outline:none;color:#222;padding:2px 4px;}
+.sn:focus{background:#f7f7f7;border-radius:4px;}
+/* 行前 */
+.pgwrap{padding:14px 16px 10px;border-bottom:.5px solid #f0f0f0;}
+.pghd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.pglbl{font-size:14px;font-weight:600;color:#222;}
+.pgcnt{font-size:12px;color:#888;}
+.pgbar{height:6px;background:#eee;border-radius:3px;}
+.pgfill{height:100%;background:#27ae60;border-radius:3px;transition:width .3s;}
+.clhd{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#f7f7f7;border-top:.5px solid #eee;border-bottom:.5px solid #eee;}
+.cltitle{font-size:13px;font-weight:600;color:#555;display:flex;align-items:center;gap:6px;}
+.cladd{width:30px;height:30px;border-radius:50%;border:1.5px solid #ddd;background:#fff;color:#555;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:20px;touch-action:manipulation;}
+.fitem{display:flex;align-items:center;gap:12px;padding:0 16px;border-bottom:.5px solid #f0f0f0;background:#fff;}
+.fitem.on .fn{color:#bbb;text-decoration:line-through;}
+.fbox{width:26px;height:26px;min-width:26px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;color:transparent;touch-action:manipulation;}
+.fitem.on .fbox{background:#27ae60;border-color:#27ae60;color:#fff;}
+.fbody{flex:1;min-width:0;padding:12px 0;}
+.fn{display:block;width:100%;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;word-wrap:break-word;line-height:1.5;}
+.fn:focus{background:#f7f7f7;}
+.fn::placeholder{color:#ccc;}
+.ffrow{display:flex;align-items:center;gap:6px;margin-top:6px;}
+.fflbl{font-size:11px;color:#aaa;padding-left:4px;white-space:nowrap;}
+.ff{flex:1;font-size:13px;color:#888;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;word-wrap:break-word;}
+.ff:focus{background:#f7f7f7;color:#222;}
+.ff::placeholder{color:#ccc;font-size:12px;}
+.fdel{font-size:14px;color:#ddd;background:none;border:none;cursor:pointer;padding:4px 8px;flex-shrink:0;touch-action:manipulation;}
+.gitem{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:.5px solid #f0f0f0;background:#fff;}
+.gitem.on .gn{color:#bbb;text-decoration:line-through;}
+.gbox{width:24px;height:24px;min-width:24px;border-radius:6px;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;color:transparent;touch-action:manipulation;}
+.gitem.on .gbox{background:#27ae60;border-color:#27ae60;color:#fff;}
+.gn{flex:1;font-size:14px;color:#222;background:transparent;border:none;outline:none;padding:4px 6px;border-radius:6px;word-wrap:break-word;line-height:1.5;}
+.gn:focus{background:#f7f7f7;}
+.gn::placeholder{color:#ccc;}
+.gdel{font-size:14px;color:#ddd;background:none;border:none;cursor:pointer;padding:4px 8px;flex-shrink:0;touch-action:manipulation;}
+.addwrap{padding:12px 16px 24px;}
+.addsec{width:100%;padding:14px;border-radius:12px;font-size:14px;cursor:pointer;background:#fff;color:#333;border:1px solid #ddd;touch-action:manipulation;}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;font-size:13px;padding:10px 22px;border-radius:24px;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999;white-space:nowrap;}
+.toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="toast" id="TOAST">✅ 已自動儲存</div>
+<div class="app">
+  <div class="sbar"><span>旅途記 TravelLog</span><span>🇯🇵 東京 4/14–4/19</span></div>
+  <div class="nhead">
+    <input class="ntitle" id="TT" value="東京行程 2026">
+    <div class="nsub">✏ 所有欄位可直接點擊編輯・自動儲存</div>
+  </div>
+  <div class="tbar">
+    <div class="tab active" id="T0"><div class="ti">🗺</div>行程</div>
+    <div class="tab" id="T1"><div class="ti">📅</div>日程</div>
+    <div class="tab" id="T2"><div class="ti">💴</div>費用</div>
+    <div class="tab" id="T3"><div class="ti">✅</div>行前</div>
+  </div>
+
+  <!-- 行程 -->
+  <div class="page show" id="P0">
+    <div class="sec">
+      <div class="sh">📋 基本資訊</div>
+      <div class="card">
+        <div class="row"><div class="lbl">國家/地區</div><input class="inp" value="日本・東京"></div>
+        <div class="row"><div class="lbl">景點</div><input class="inp" value="淺草・秋葉原・澀谷・新宿・銀座・六本木"></div>
+        <div class="row"><div class="lbl">人數</div><input class="inp" id="PAX" type="number" min="1" value="2"></div>
+        <div class="row"><div class="lbl">出發</div><input class="inp" type="date" value="2026-04-14"></div>
+        <div class="row"><div class="lbl">回程</div><input class="inp" type="date" value="2026-04-19"></div>
+      </div>
+      <div class="sh">✈ 去程</div>
+      <div class="card">
+        <div class="row"><div class="lbl">出發機場</div><input class="inp" value="TSA 松山機場 T1"></div>
+        <div class="row"><div class="lbl">航班</div><input class="inp" value="全日空 NH852 | 波音787-8 經濟艙"></div>
+        <div class="row"><div class="lbl">起飛</div><input class="inp" value="13:30"></div>
+        <div class="row"><div class="lbl">抵達</div><input class="inp" value="HND 東京羽田機場 T3 | 17:45"></div>
+      </div>
+      <div class="sh">🔄 回程</div>
+      <div class="card">
+        <div class="row"><div class="lbl">出發機場</div><input class="inp" value="HND 東京羽田機場 T0"></div>
+        <div class="row"><div class="lbl">航班</div><input class="inp" value="全日空 NH851 | 波音787-8 經濟艙"></div>
+        <div class="row"><div class="lbl">起飛</div><input class="inp" value="09:40"></div>
+        <div class="row"><div class="lbl">抵達</div><input class="inp" value="TSA 台北松山機場 T1 | 12:05"></div>
+        <div class="row"><div class="lbl">送機</div><input class="inp" value="4/19 06:10 N+飯店出發（已預約送機）"></div>
+      </div>
+      <div class="sh"><span>🏨 住宿</span><button class="btn-link" id="BH">＋ 新增</button></div>
+      <div id="HL">
+        <div class="card" style="margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><b style="font-size:13px;">住宿 1｜4/14–4/17</b><button class="btn-x" onclick="this.closest('.card').remove()">✕</button></div>
+          <div class="row"><div class="lbl">飯店</div><input class="inp" value="東橫INN 東京淺草藏前2號店"></div>
+          <div class="row"><div class="lbl">地址</div><input class="inp" value="2-7-5 Kuramae, Taito City, Tokyo"></div>
+          <div class="row"><div class="lbl">地圖</div><div style="flex:1;"><div class="mrow"><input class="min" id="MH1" value="東橫INN 東京淺草藏前2號店"><button class="mbtn" onclick="gmap('MH1')">🗺</button></div><div class="mnote">輸入名稱點 🗺 開啟地圖</div></div></div>
+          <div class="row"><div class="lbl">入住</div><input class="inp" type="date" value="2026-04-14"></div>
+          <div class="row"><div class="lbl">退房</div><input class="inp" type="date" value="2026-04-17"></div>
+        </div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><b style="font-size:13px;">住宿 2｜4/17–4/19</b><button class="btn-x" onclick="this.closest('.card').remove()">✕</button></div>
+          <div class="row"><div class="lbl">飯店</div><input class="inp" value="東京日本橋 N+酒店"></div>
+          <div class="row"><div class="lbl">地址</div><input class="inp" value="Nihonbashi Hamacho 2-23-8, Chuo City, Tokyo"></div>
+          <div class="row"><div class="lbl">地圖</div><div style="flex:1;"><div class="mrow"><input class="min" id="MH2" value="Nplus Hotel Tokyo Nihonbashi"><button class="mbtn" onclick="gmap('MH2')">🗺</button></div><div class="mnote">輸入名稱點 🗺 開啟地圖</div></div></div>
+          <div class="row"><div class="lbl">入住</div><input class="inp" type="date" value="2026-04-17"></div>
+          <div class="row"><div class="lbl">退房</div><input class="inp" type="date" value="2026-04-19"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 日程 -->
+  <div class="page" id="P1">
+    <div class="day-bar">
+      <div class="day-hint">點擊切換天數</div>
+      <div class="day-btns">
+        <button class="btn-green" id="BADD">＋ 新增天</button>
+        <button class="btn-red" id="BDEL">🗑 刪除</button>
+      </div>
+    </div>
+    <div class="dscroll" id="DS"></div>
+    <div id="DP"></div>
+  </div>
+
+  <!-- 費用 -->
+  <div class="page" id="P2">
+    <div class="sec">
+      <div class="sgrid">
+        <div class="scard"><div class="slbl">總支出（台幣）</div><div class="sval" id="ET">NT$0</div></div>
+        <div class="scard"><div class="slbl">每人均攤</div><div class="sval" id="EP">NT$0</div><div class="ssub" id="EPAX">2 人</div></div>
+      </div>
+      <div class="rrow">
+        <span style="font-size:13px;color:#888;">匯率：¥1 =</span>
+        <input class="rinp" id="RATE" type="number" value="0.213" step="0.001">
+        <span style="font-size:13px;color:#888;">NT$</span>
+      </div>
+      <div class="sh"><span>📋 費用明細</span><button class="btn-link" id="BEXP">＋ 新增</button></div>
+      <div class="card" id="EL"><div id="EE" style="padding:12px 0;text-align:center;font-size:13px;color:#ccc;">點擊 ＋ 新增費用</div></div>
+      <div class="sh" style="margin-top:14px;">💰 分帳</div>
+      <div class="card" id="SC"><div style="font-size:13px;color:#ccc;text-align:center;padding:8px 0;">請先填入人數</div></div>
+    </div>
+  </div>
+
+  <!-- 行前 -->
+  <div class="page" id="P3">
+    <div class="pgwrap">
+      <div class="pghd"><div class="pglbl">行前準備進度</div><div class="pgcnt" id="CC">0 / 0</div></div>
+      <div class="pgbar"><div class="pgfill" id="CF" style="width:0%"></div></div>
+    </div>
+    <div id="CB"></div>
+    <div class="addwrap"><button class="addsec" id="BSEC">＋ 新增自訂分類</button></div>
+  </div>
+</div>
+
+<script>
+// 全域函式
+function gmap(id){
+  var el=document.getElementById(id);
+  var q=el?el.value.trim():'';
+  if(!q){alert('請先輸入地點名稱');return;}
+  var url='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+  // 用 location.href 開啟（iOS Safari 最相容），按返回鍵可回到 App
+  window.location.href=url;
+}
+
+// 動態建立地圖按鈕用
+function gmapDirect(q){
+  if(!q||!q.trim()){alert('請先輸入地點名稱');return;}
+  var url='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q.trim());
+  window.location.href=url;
+}
+
+(function(){
+var activeDay=-1, days=[], hCnt=2, clN=0;
+var WD=['日','一','二','三','四','五','六'];
+var CATS=[
+  {e:'🏨',b:'bh',l:'住宿'},{e:'⛩',b:'bs',l:'景點'},
+  {e:'🍜',b:'bf',l:'餐廳'},{e:'☕',b:'bc',l:'咖啡'},
+  {e:'🚇',b:'bt',l:'交通'},{e:'🛍',b:'bo',l:'購物'},
+  {e:'📸',b:'bo',l:'拍照'},{e:'🌙',b:'bc',l:'夜間'},
+  {e:'📌',b:'bo',l:'其它'}
+];
+
+// Toast
+var toast=document.getElementById('TOAST'),st=null;
+function showToast(){clearTimeout(st);toast.classList.add('show');st=setTimeout(function(){toast.classList.remove('show');},2000);}
+
+// 儲存
+var svTimer=null;
+function save(){clearTimeout(svTimer);svTimer=setTimeout(function(){try{var d={t:document.getElementById('TT').value};localStorage.setItem('tl3',JSON.stringify(d));showToast();}catch(e){}},1000);}
+
+// 分頁切換 - 核心修正
+function goPage(n){
+  for(var i=0;i<4;i++){
+    var p=document.getElementById('P'+i);
+    var t=document.getElementById('T'+i);
+    if(p) p.className=i===n?'page show':'page';
+    if(t) t.className=i===n?'tab active':'tab';
+  }
+}
+
+// 綁定分頁按鈕 - 分開綁定每一個，確保手機可用
+for(var _i=0;_i<4;_i++){
+  (function(n){
+    var el=document.getElementById('T'+n);
+    if(!el) return;
+    // click for desktop
+    el.addEventListener('click',function(e){e.preventDefault();goPage(n);});
+    // touchend for mobile
+    el.addEventListener('touchend',function(e){e.preventDefault();e.stopPropagation();goPage(n);},{passive:false});
+  })(_i);
+}
+
+// 住宿新增
+document.getElementById('BH').addEventListener('click',function(){
+  hCnt++;
+  var c=document.createElement('div');c.className='card';c.style.marginBottom='10px';
+  var uid='HM'+Date.now();
+  c.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;"><b style="font-size:13px;">住宿 '+hCnt+'</b><button class="btn-x" onclick="this.closest(\'.card\').remove()">✕</button></div>'
+    +'<div class="row"><div class="lbl">飯店</div><input class="inp" placeholder="飯店名稱"></div>'
+    +'<div class="row"><div class="lbl">地址</div><input class="inp" placeholder="地址"></div>'
+    +'<div class="row"><div class="lbl">地圖</div><div style="flex:1;"><div class="mrow"><input class="min" id="'+uid+'" placeholder="輸入飯店名搜尋"><button class="mbtn" onclick="gmap(\''+uid+'\')">🗺</button></div><div class="mnote">點 🗺 在 Google Maps 開啟</div></div></div>'
+    +'<div class="row"><div class="lbl">入住</div><input class="inp" type="date"></div>'
+    +'<div class="row"><div class="lbl">退房</div><input class="inp" type="date"></div>';
+  document.getElementById('HL').appendChild(c);
+  c.querySelector('.inp').focus();
+});
+
+// 日期卡片
+function mkChip(idx,ds){
+  var d=new Date(ds+'T00:00:00'),ok=!isNaN(d.getTime());
+  var c=document.createElement('div');c.className='dchip';c.dataset.i=idx;
+  c.innerHTML='<div class="dmon">'+(ok?(d.getMonth()+1)+'月':'')+'</div>'
+    +'<div class="dday">'+(ok?d.getDate():'?')+'</div>'
+    +'<div class="dwk">'+(ok?'週'+WD[d.getDay()]:'--')+'</div>'
+    +'<div class="ddot"></div>';
+  c.addEventListener('click',function(){swDay(idx);});
+  c.addEventListener('touchend',function(e){e.preventDefault();swDay(idx);},{passive:false});
+  return c;
+}
+
+function swDay(idx){
+  activeDay=idx;
+  document.querySelectorAll('.dchip').forEach(function(c){c.className=parseInt(c.dataset.i)===idx?'dchip on':'dchip';});
+  for(var i=0;i<days.length;i++){var p=document.getElementById('DP_'+i);if(p)p.style.display=i===idx?'':'none';}
+  var chip=document.querySelector('.dchip[data-i="'+idx+'"]');
+  if(chip)chip.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+}
+
+// 地圖欄位
+function mkMapField(ph,uid,val){
+  var wrap=document.createElement('div');wrap.style.flex='1';
+  var row=document.createElement('div');row.className='mrow';
+  var inp=document.createElement('input');inp.className='min';inp.placeholder=ph;inp.id='MF_'+uid;if(val)inp.value=val;
+  var btn=document.createElement('button');btn.className='mbtn';btn.textContent='🗺';
+  btn.onclick=function(){
+    var inp=document.getElementById('MF_'+uid);
+    var q=inp?inp.value.trim():'';
+    if(!q){alert('請先輸入地點名稱');return false;}
+    window.location.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+    return false;
+  };
+  btn.addEventListener('touchend',function(e){
+    e.preventDefault();
+    var inp=document.getElementById('MF_'+uid);
+    var q=inp?inp.value.trim():'';
+    if(!q){alert('請先輸入地點名稱');return;}
+    window.location.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+  },{passive:false});
+  var note=document.createElement('div');note.className='mnote';note.textContent='點 🗺 在 Google Maps 開啟';
+  row.appendChild(inp);row.appendChild(btn);wrap.appendChild(row);wrap.appendChild(note);
+  return wrap;
+}
+
+// 行程項目
+function mkItem(o){
+  o=o||{};
+  var uid='I'+Date.now()+Math.floor(Math.random()*9999);
+  var div=document.createElement('div');div.className='iitem';
+  // 分類
+  var cw=document.createElement('div');cw.className='icat '+(o.b||'bo');
+  var cs=document.createElement('span');cs.textContent=o.e||'📌';cs.style.pointerEvents='none';
+  var cm=document.createElement('div');cm.className='cmenu';
+  CATS.forEach(function(ct){
+    var op=document.createElement('div');op.className='copt';
+    op.innerHTML=ct.e+'<span class="clbl">'+ct.l+'</span>';
+    op.addEventListener('click',function(e){e.stopPropagation();cs.textContent=ct.e;cw.className='icat '+ct.b;cm.classList.remove('open');save();});
+    op.addEventListener('touchend',function(e){e.preventDefault();e.stopPropagation();cs.textContent=ct.e;cw.className='icat '+ct.b;cm.classList.remove('open');save();},{passive:false});
+    cm.appendChild(op);
+  });
+  cw.appendChild(cs);cw.appendChild(cm);
+  function toggleCM(e){e.stopPropagation();document.querySelectorAll('.cmenu').forEach(function(m){if(m!==cm)m.classList.remove('open');});cm.classList.toggle('open');}
+  cw.addEventListener('click',toggleCM);
+  cw.addEventListener('touchend',function(e){e.preventDefault();toggleCM(e);},{passive:false});
+  // 欄位
+  var bd=document.createElement('div');bd.className='ibody';
+  [['行程',o.name||'','景點/行程名稱'],['特色',o.desc||'','備註/特色'],['時間',o.time||'','例：09:30']].forEach(function(r){
+    var rw=document.createElement('div');rw.className='irow';
+    var lb=document.createElement('div');lb.className='ilbl';lb.textContent=r[0];
+    var ip=document.createElement('input');ip.className='iin';ip.value=r[1];ip.placeholder=r[2];
+    ip.addEventListener('input',save);
+    rw.appendChild(lb);rw.appendChild(ip);bd.appendChild(rw);
+  });
+  // 費用
+  var ar=document.createElement('div');ar.className='iamt-row';
+  var al=document.createElement('span');al.className='iamt-lbl';al.textContent='💴 費用';
+  var ai=document.createElement('input');ai.className='iamt expense-amt';ai.type='number';ai.placeholder='金額';ai.value=o.amt||'';
+  ai.addEventListener('input',function(){calcExp();save();});
+  var ac=document.createElement('span');ac.className='icur';ac.textContent='¥';
+  ar.appendChild(al);ar.appendChild(ai);ar.appendChild(ac);bd.appendChild(ar);
+  // 刪除
+  var db=document.createElement('button');db.className='idel';db.textContent='✕';
+  db.addEventListener('click',function(){div.remove();calcExp();save();});
+  // 展開
+  var et=document.createElement('button');et.className='etog';et.textContent='▸ 展開（地圖・時間・拍照）';
+  var ed=document.createElement('div');ed.className='iexp';
+  function togExp(){var op=ed.classList.toggle('open');et.textContent=op?'▾ 收起':'▸ 展開（地圖・時間・拍照）';}
+  et.addEventListener('click',togExp);
+  et.addEventListener('touchend',function(e){e.preventDefault();togExp();},{passive:false});
+  // 展開內容
+  var r1=document.createElement('div');r1.className='exrow';
+  var l1=document.createElement('div');l1.className='exlbl';l1.textContent='地址/地圖';
+  r1.appendChild(l1);r1.appendChild(mkMapField('輸入景點名稱',uid+'a',o.mq||''));
+  ed.appendChild(r1);
+  [['營業時間',o.hrs||'','例：09:00–22:00'],['拍照備註',o.photo||'','拍照地點/角度建議']].forEach(function(r){
+    var rw=document.createElement('div');rw.className='exrow';
+    var lb=document.createElement('div');lb.className='exlbl';lb.textContent=r[0];
+    var ip=document.createElement('input');ip.className='exin';ip.value=r[1];ip.placeholder=r[2];
+    ip.addEventListener('input',save);
+    rw.appendChild(lb);rw.appendChild(ip);ed.appendChild(rw);
+  });
+  var r2=document.createElement('div');r2.className='exrow';
+  var l2=document.createElement('div');l2.className='exlbl';l2.textContent='交通導航';
+  r2.appendChild(l2);r2.appendChild(mkMapField('輸入目的地導航',uid+'t',o.nav||''));
+  ed.appendChild(r2);
+  var tp=document.createElement('div');tp.className='itop';
+  tp.appendChild(cw);tp.appendChild(bd);tp.appendChild(db);
+  div.appendChild(tp);div.appendChild(et);div.appendChild(ed);
+  return div;
+}
+
+// 天面板
+function mkPanel(idx,items){
+  var p=document.createElement('div');p.id='DP_'+idx;p.style.display='none';
+  (items||[]).forEach(function(it){p.appendChild(mkItem(it));});
+  var ft=document.createElement('div');ft.style.padding='8px 16px 14px';
+  var bt=document.createElement('button');bt.className='add-btn';bt.textContent='＋ 新增行程項目';
+  bt.addEventListener('click',function(){var item=mkItem({});p.insertBefore(item,ft);item.querySelector('.iin').focus();save();});
+  ft.appendChild(bt);p.appendChild(ft);return p;
+}
+
+document.getElementById('BADD').addEventListener('click',function(){
+  var idx=days.length;
+  var last=days.length>0?new Date(days[days.length-1]+'T00:00:00'):null;
+  if(last&&!isNaN(last.getTime())){last.setDate(last.getDate()+1);}
+  var ds=last?last.toISOString().slice(0,10):'2026-04-20';
+  days.push(ds);
+  document.getElementById('DS').appendChild(mkChip(idx,ds));
+  document.getElementById('DP').appendChild(mkPanel(idx,[]));
+  swDay(idx);save();
+});
+
+document.getElementById('BDEL').addEventListener('click',function(){
+  if(activeDay<0){alert('請先點選要刪除的天數');return;}
+  if(!confirm('確定刪除第'+(activeDay+1)+'天？'))return;
+  var chip=document.querySelector('.dchip[data-i="'+activeDay+'"]');if(chip)chip.remove();
+  var panel=document.getElementById('DP_'+activeDay);if(panel)panel.remove();
+  days.splice(activeDay,1);
+  var prev=activeDay>0?activeDay-1:0;activeDay=-1;
+  if(days.length>0)swDay(prev);save();
+});
+
+document.addEventListener('click',function(e){if(!e.target.closest('.icat'))document.querySelectorAll('.cmenu').forEach(function(m){m.classList.remove('open');});});
+document.addEventListener('touchend',function(e){if(!e.target.closest('.icat'))document.querySelectorAll('.cmenu').forEach(function(m){m.classList.remove('open');});},{passive:true});
+
+// 東京行程資料
+var TD=['2026-04-14','2026-04-15','2026-04-16','2026-04-17','2026-04-18','2026-04-19'];
+var DD=[
+  [
+    {e:'🚇',b:'bt',name:'出發 松山機場→羽田',desc:'NH852 | 13:30起飛 | 17:45抵達T3',time:'13:30',mq:'台北松山機場'},
+    {e:'🚇',b:'bt',name:'羽田機場→淺草',desc:'京急線→品川→都營淺草線→淺草（約45分）',time:'18:30'},
+    {e:'🏨',b:'bh',name:'Check in 東橫INN 淺草藏前',desc:'Kuramae 2-7-5, Taito｜住至4/17',time:'19:30',mq:'東橫INN 東京淺草藏前2號店'},
+    {e:'📸',b:'bo',name:'晴空塔夜景拍照路線',desc:'①吾妻橋→②言問橋→③押上仰角→④水中倒影 押上站A2出口 Narinira 5-15-4',time:'20:00',photo:'水中倒影最佳：押上站A2出口 Narinira 5-15-4',mq:'晴空塔 押上 水中倒影'},
+    {e:'🍜',b:'bf',name:'鴨to葱らーめん 淺草店',desc:'24小時｜2-17-9 Kaminarimon, Taito',time:'21:15',hrs:'24小時',mq:'鴨to葱 浅草店'},
+    {e:'📸',b:'bo',name:'雷門夜景拍照',desc:'22:00後人少，從鴨to葱步行約5分',time:'22:30',photo:'22:00後遊客最少'}
+  ],
+  [
+    {e:'⛩',b:'bs',name:'淺草寺・雷門・仲見世通',desc:'09:00前往人少',time:'09:00',mq:'淺草寺'},
+    {e:'⛩',b:'bs',name:'淺草文化觀光中心 8F展望台',desc:'免費！眺望晴空塔｜雷門2-18-9',time:'09:00',hrs:'09:00–22:00',mq:'淺草文化観光センター'},
+    {e:'🍜',b:'bf',name:'淺草美食',desc:'浅草うなな鰻魚飯糰9:30–17:30｜Age.3炸三明治10:00–19:00(推薦11號)｜緣炸雞YUKARI 10:30–22:00',time:'早上',mq:'浅草うなな'},
+    {e:'⛩',b:'bs',name:'萬代總部 Bandai',desc:'外牆麵包超人等角色石雕｜Komagata 1-4-8',time:'11:00',mq:'バンダイ本社'},
+    {e:'🚇',b:'bt',name:'前往秋葉原',desc:'都營淺草線→淺草橋→步行（約15分）',time:'12:30'},
+    {e:'🛍',b:'bo',name:'秋葉原',desc:'扭蛋會館11:00–20:00｜MANDARAKE 12:00–20:00｜駿河屋11:00–21:00｜Yamashiroya玩具10:00–21:30',time:'13:00',mq:'秋葉原扭蛋會館'},
+    {e:'📸',b:'bo',name:'萬世橋 拍照',desc:'秋葉原途中順拍',time:'途中',mq:'萬世橋 Manseibashi'},
+    {e:'🚇',b:'bt',name:'前往東京車站',desc:'山手線/中央線（約5分）',time:'16:30'},
+    {e:'⛩',b:'bs',name:'東京車站・KITTE 6F展望台',desc:'展望台免費｜Pista&Tokyo開心果餅乾（八重洲北口9:30–20:30）',time:'17:00',mq:'KITTE丸の内'},
+    {e:'📸',b:'bo',name:'有樂町雞肉串燒小路',desc:'Yurakucho 2-1-18',time:'19:30',mq:'有楽町 焼き鳥横丁'},
+    {e:'🍜',b:'bf',name:'AFURI 阿夫利 有樂町',desc:'柚子拉麵｜11:00–23:00',time:'20:00',hrs:'11:00–23:00',mq:'AFURI 有楽町'}
+  ],
+  [
+    {e:'⛩',b:'bs',name:'明治神宮',desc:'建議早上前往遊客少｜4月5:10–17:50',time:'05:10',hrs:'5:10–17:50',mq:'明治神宮'},
+    {e:'🛍',b:'bo',name:'竹下通・SANRIO CAFÉ原宿',desc:'明治神宮南口即是竹下通｜SANRIO CAFÉ 神宮前1-16-4 3F｜11:00–20:00',time:'10:00',hrs:'11:00–20:00',mq:'SANRIO CAFE 原宿'},
+    {e:'🛍',b:'bo',name:'表參道逛街',desc:'okiiRo文具11:00–20:00(週三休)｜PORTER12:00–20:00｜COMME des GARÇONS青山11:00–20:00',time:'11:00',mq:'表参道'},
+    {e:'🍜',b:'bf',name:'午餐',desc:'麵散(烏冬)神宮前6-13-7 11:30–21:30｜EDW yellow咖哩蛋包飯 宇田川町26-5 B1 11:00–21:00',time:'午餐',mq:'麵散 原宿'},
+    {e:'🛍',b:'bo',name:'澀谷',desc:'MEDICOM TOY(BE@RBRICK) PARCO 4F｜CDG GIRL PARCO 1F｜蜡笔小新 新宿3-23-17 Okadaya5F 10:30–20:30',time:'14:00',mq:'渋谷PARCO'},
+    {e:'⛩',b:'bs',name:'SHIBUYA SKY 展望台',desc:'渋谷スクランブルスクエア屋上｜建議傍晚入場看夕陽→夜景｜10:00–22:30',time:'16:00',hrs:'10:00–22:30(最後21:00)',photo:'建議16:00–17:00入場看夕陽轉夜景',mq:'SHIBUYA SKY'},
+    {e:'📸',b:'bo',name:'新宿拍照',desc:'NEWoMan Shinjuku 5F屋頂｜新宿站南口人行天橋',time:'17:00',mq:'NEWoMan Shinjuku'},
+    {e:'🍜',b:'bf',name:'新宿/澀谷晚餐',desc:'自由選擇',time:'晚餐'}
+  ],
+  [
+    {e:'☕',b:'bc',name:'早餐 銀座ブラジル浅草',desc:'淺草1-28-2｜09:00–15:00(週三四休)｜僅現金｜豬排三明治/奶油吐司/炸雞',time:'09:00',hrs:'09:00–15:00(週三四休)',mq:'銀座ブラジル 浅草'},
+    {e:'🏨',b:'bh',name:'退房 東橫INN',desc:'行李寄放或帶往日本橋新飯店',time:'10:30'},
+    {e:'🚇',b:'bt',name:'前往銀座',desc:'都營淺草線→東銀座（約15分）',time:'11:00'},
+    {e:'🛍',b:'bo',name:'銀座 Ginza Orions',desc:'銀座7-3-13 10F｜下午13:00才開，可先逛街',time:'11:30',hrs:'13:00–23:00',mq:'Ginza Orions 銀座オリオンズ'},
+    {e:'🚇',b:'bt',name:'前往六本木',desc:'東銀座搭日比谷線→六本木（約10分）',time:'15:00'},
+    {e:'⛩',b:'bs',name:'六本木之丘展望台',desc:'Mori Tower 52F｜10:00–22:00｜建議傍晚入場看夕陽+夜景',time:'15:30',hrs:'10:00–22:00',photo:'建議16:00後入場',mq:'六本木ヒルズ 展望台'},
+    {e:'📸',b:'bo',name:'東京鐵塔步行拍照路線',desc:'赤羽橋站→芝公園→東麻布→35.39路口→東麻布步道橋→心光院外圍→鐵塔下仰拍',time:'傍晚',photo:'赤羽橋站出口即可拍第一張',mq:'東京タワー 赤羽橋'},
+    {e:'🍜',b:'bf',name:'AFURI 六本木ヒルズ',desc:'六本木6-4-1 ヒルズメトロハット B2F｜11:00–23:00',time:'19:00',hrs:'11:00–23:00',mq:'AFURI 六本木ヒルズ'},
+    {e:'🏨',b:'bh',name:'Check in 日本橋 N+酒店',desc:'Nihonbashi Hamacho 2-23-8 中央區｜住至4/19',time:'20:30',mq:'Nplus Hotel Tokyo Nihonbashi'}
+  ],
+  [
+    {e:'⛩',b:'bs',name:'小網神社',desc:'Nihonbashikoamicho 16-23 Chuo｜飯店步行可達｜強運厄除洗錢儀式',time:'09:30',mq:'小網神社'},
+    {e:'⛩',b:'bs',name:'日本橋周邊補遊',desc:'依前幾日狀況補遊，或逛街買伴手禮',time:'上午'},
+    {e:'🚇',b:'bt',name:'前往五反田',desc:'山手線→五反田站（約20–30分）',time:'16:30'},
+    {e:'🍜',b:'bf',name:'✅とり料理ふじ 五反田【已預約】',desc:'✅已預約 17:00入店/19:30退店/2名｜西五反田2-15-11 松岡ビル2F',time:'17:00',hrs:'17:00–19:30（已預約）',mq:'とり料理ふじ 五反田'},
+    {e:'🏨',b:'bh',name:'返回飯店・整理行李',desc:'明天早上需前往羽田機場',time:'19:30'}
+  ],
+  [
+    {e:'🏨',b:'bh',name:'退房 N+酒店',desc:'整理行李，送機車在飯店等候',time:'06:00'},
+    {e:'🚇',b:'bt',name:'送機出發 → 羽田 T3',desc:'已預約送機，車程約30–40分鐘',time:'06:10',mq:'東京羽田機場'},
+    {e:'🚇',b:'bt',name:'NH851 返台',desc:'09:40羽田起飛 → 12:05松山抵達',time:'09:40'}
+  ]
+];
+
+TD.forEach(function(ds,i){
+  days.push(ds);
+  document.getElementById('DS').appendChild(mkChip(i,ds));
+  document.getElementById('DP').appendChild(mkPanel(i,DD[i]||[]));
+});
+swDay(0);
+
+// 費用
+function calcExp(){
+  var rate=parseFloat(document.getElementById('RATE').value)||1;
+  var pax=parseInt(document.getElementById('PAX').value)||2;
+  var total=0;
+  document.querySelectorAll('.expense-amt,.eamt').forEach(function(el){var v=parseFloat(el.value);if(!isNaN(v)&&v>0)total+=v;});
+  var twd=Math.round(total*rate),per=pax>0?Math.round(twd/pax):0;
+  document.getElementById('ET').textContent='NT$'+twd.toLocaleString();
+  document.getElementById('EP').textContent='NT$'+per.toLocaleString();
+  document.getElementById('EPAX').textContent=pax+'人';
+  var sc=document.getElementById('SC');
+  if(pax<2){sc.innerHTML='<div style="font-size:13px;color:#ccc;text-align:center;padding:8px 0;">2人以上才顯示分帳</div>';return;}
+  var CLR=[['#e8f0f8','#1a5fa8'],['#e8f5e9','#2e7d32'],['#fff3e0','#e65100'],['#fce4ec','#880e4f']];
+  var html='';
+  for(var i=0;i<pax;i++){
+    var bg=CLR[i%4][0],fg=CLR[i%4][1];
+    html+='<div class="sprow"><div class="avat" style="background:'+bg+';color:'+fg+';">P'+(i+1)+'</div>'
+      +'<input class="sn" placeholder="旅伴 '+(i+1)+' 姓名">'
+      +'<span style="font-size:14px;color:#888;white-space:nowrap;">NT$'+per.toLocaleString()+'</span></div>';
+  }
+  sc.innerHTML=html;
+}
+document.getElementById('RATE').addEventListener('input',function(){calcExp();save();});
+document.getElementById('PAX').addEventListener('input',function(){calcExp();save();});
+document.getElementById('BEXP').addEventListener('click',function(){
+  var ee=document.getElementById('EE');if(ee)ee.style.display='none';
+  var row=document.createElement('div');row.className='erow';
+  var ni=document.createElement('input');ni.className='ename';ni.placeholder='項目名稱（例：機票）';ni.addEventListener('input',save);
+  var ai=document.createElement('input');ai.className='eamt';ai.type='number';ai.placeholder='金額';
+  ai.addEventListener('input',function(){calcExp();save();});
+  var db=document.createElement('button');db.className='btn-x';db.textContent='✕';
+  db.addEventListener('click',function(){row.remove();calcExp();save();});
+  row.appendChild(ni);row.appendChild(ai);row.appendChild(db);
+  document.getElementById('EL').appendChild(row);ni.focus();
+});
+calcExp();
+
+// 行前清單
+function mkFI(n,a){
+  var div=document.createElement('div');div.className='fitem';
+  var bx=document.createElement('div');bx.className='fbox';bx.textContent='✓';
+  function tog(){div.classList.toggle('on');updP();save();}
+  bx.addEventListener('click',tog);
+  bx.addEventListener('touchend',function(e){e.preventDefault();tog();},{passive:false});
+  var bd=document.createElement('div');bd.className='fbody';
+  var ni=document.createElement('input');ni.className='fn';ni.value=n||'';ni.placeholder='事項名稱';ni.addEventListener('input',save);
+  var fr=document.createElement('div');fr.className='ffrow';
+  var fl=document.createElement('span');fl.className='fflbl';fl.textContent='費用';
+  var fi=document.createElement('input');fi.className='ff';fi.value=a||'';fi.placeholder='金額或說明';fi.addEventListener('input',save);
+  fr.appendChild(fl);fr.appendChild(fi);bd.appendChild(ni);bd.appendChild(fr);
+  var db=document.createElement('button');db.className='fdel';db.textContent='✕';
+  db.addEventListener('click',function(){div.remove();updP();save();});
+  div.appendChild(bx);div.appendChild(bd);div.appendChild(db);return div;
+}
+function mkGI(n){
+  var div=document.createElement('div');div.className='gitem';
+  var bx=document.createElement('div');bx.className='gbox';bx.textContent='✓';
+  function tog(){div.classList.toggle('on');updP();save();}
+  bx.addEventListener('click',tog);
+  bx.addEventListener('touchend',function(e){e.preventDefault();tog();},{passive:false});
+  var ni=document.createElement('input');ni.className='gn';ni.value=n||'';ni.placeholder='物品名稱';ni.addEventListener('input',save);
+  var db=document.createElement('button');db.className='gdel';db.textContent='✕';
+  db.addEventListener('click',function(){div.remove();updP();save();});
+  div.appendChild(bx);div.appendChild(ni);div.appendChild(db);return div;
+}
+function addCI(sid,type){
+  var lst=document.getElementById('CL_'+sid);if(!lst)return;
+  var item=type==='g'?mkGI(''):mkFI('','');
+  lst.appendChild(item);item.querySelector('input').focus();updP();save();
+}
+function mkSec(data){
+  var wrap=document.createElement('div');
+  var hd=document.createElement('div');hd.className='clhd';
+  var tt=document.createElement('div');tt.className='cltitle';
+  tt.innerHTML='<span>'+data.icon+'</span><span>'+data.title+'</span>';
+  var ab=document.createElement('button');ab.className='cladd';ab.textContent='＋';
+  ab.addEventListener('click',function(){addCI(data.id,data.type);});
+  ab.addEventListener('touchend',function(e){e.preventDefault();addCI(data.id,data.type);},{passive:false});
+  hd.appendChild(tt);hd.appendChild(ab);
+  var lst=document.createElement('div');lst.id='CL_'+data.id;
+  (data.items||[]).forEach(function(it){
+    lst.appendChild(data.type==='g'?mkGI(it.n||''):mkFI(it.n||'',it.a||''));
+  });
+  wrap.appendChild(hd);wrap.appendChild(lst);
+  document.getElementById('CB').appendChild(wrap);clN++;
+}
+var CLD=[
+  {id:'s0',icon:'📋',title:'預約 & 費用記錄',type:'f',items:[
+    {n:'旅平險',a:''},{n:'Wi-Fi 申請',a:''},{n:'機場送機（4/19）',a:''},
+    {n:'とり料理ふじ 預約 ✅',a:''},{n:'SHIBUYA SKY 票',a:''},
+    {n:'六本木之丘展望台 票',a:''},{n:'換日幣',a:''}
+  ]},
+  {id:'s1',icon:'💊',title:'藥物',type:'g',items:[{n:'腸胃藥'},{n:'感冒藥'},{n:'暈車藥'},{n:'外傷藥'}]},
+  {id:'s2',icon:'🎒',title:'攜帶物品',type:'g',items:[
+    {n:'充電器'},{n:'插頭（日本 A 型）'},{n:'轉接頭'},{n:'行動電源'},
+    {n:'衣服類（4月 14–19°C）'},{n:'護照 & 機票列印'},{n:'現金日幣/信用卡'}
+  ]},
+  {id:'s3',icon:'📝',title:'其它',type:'f',items:[{n:'',a:''}]}
+];
+CLD.forEach(mkSec);
+
+document.getElementById('BSEC').addEventListener('click',function(){
+  var name=prompt('新分類名稱：');if(!name)return;
+  var hf=confirm('需要費用欄位？\n確定=有費用　取消=只有名稱');
+  var id='s'+(++clN);
+  mkSec({id:id,icon:'📁',title:name,type:hf?'f':'g',items:[]});
+  addCI(id,hf?'f':'g');
+});
+
+function updP(){
+  var all=document.querySelectorAll('.fitem,.gitem');
+  var done=document.querySelectorAll('.fitem.on,.gitem.on');
+  var pct=all.length?Math.round(done.length/all.length*100):0;
+  document.getElementById('CF').style.width=pct+'%';
+  document.getElementById('CC').textContent=done.length+' / '+all.length+' 項完成';
+}
+updP();
+
+// 載入儲存
+try{var sv=localStorage.getItem('tl3');if(sv){var d=JSON.parse(sv);if(d.t)document.getElementById('TT').value=d.t;}}catch(e){}
+
+})();
+</script>
+</body>
+</html>
