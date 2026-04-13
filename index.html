@@ -53,13 +53,12 @@ body{background:#f0f0f0;min-height:100vh;display:flex;justify-content:center;pad
 .ddot{width:5px;height:5px;border-radius:50%;background:transparent;margin-top:2px;}
 .dchip.on .ddot{background:#7cb9f4;}
 /* 行程項目 */
-.iitem{border-bottom:.5px solid #f0f0f0;padding:12px 16px;overflow:hidden;position:relative;transition:background .15s;}
-.iitem.dragging{opacity:0.4;background:#f0f0f0;}
-.iitem.drag-over{border-top:2px solid #4285f4;}
-.drag-handle{font-size:18px;color:#ccc;cursor:grab;padding:4px 6px 4px 0;flex-shrink:0;margin-top:2px;touch-action:none;user-select:none;-webkit-user-select:none;}
-.drag-handle:active{cursor:grabbing;color:#888;}
+.iitem{border-bottom:.5px solid #f0f0f0;padding:12px 16px;overflow:hidden;position:relative;}
+.move-btns{display:flex;flex-direction:column;gap:2px;flex-shrink:0;margin-top:2px;}
+.mbtn-up,.mbtn-dn{width:26px;height:26px;border-radius:6px;border:.5px solid #e0e0e0;background:#f7f7f7;color:#888;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;touch-action:manipulation;-webkit-user-select:none;user-select:none;padding:0;}
+.mbtn-up:active,.mbtn-dn:active{background:#e0e0e0;}
 .itop{display:flex;gap:10px;align-items:flex-start;width:100%;overflow:hidden;}
-.icat{width:40px;height:40px;min-width:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer;position:relative;flex-shrink:0;margin-top:2px;touch-action:manipulation;}
+.icat{width:40px;height:40px;min-width:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;position:relative;}
 .bh{background:#e8f0f8;}.bs{background:#e8f5e9;}.bf{background:#fff3e0;}
 .bc{background:#fce4ec;}.bt{background:#ede7f6;}.bo{background:#f0f0f0;}
 .cmenu{display:none;position:absolute;top:44px;left:0;background:#fff;border:1px solid #ddd;border-radius:12px;padding:8px;z-index:100;flex-wrap:wrap;gap:4px;width:210px;box-shadow:0 4px 20px rgba(0,0,0,.12);}
@@ -278,7 +277,7 @@ function gmapDirect(q){
 }
 
 (function(){
-var activeDay=-1, days=[], hCnt=2, clN=0, dragSrc=null;
+var activeDay=-1, days=[], hCnt=2, clN=0;
 var WD=['日','一','二','三','四','五','六'];
 var CATS=[
   {e:'🏨',b:'bh',l:'住宿'},{e:'⛩',b:'bs',l:'景點'},
@@ -385,20 +384,37 @@ function mkItem(o){
   var uid='I'+Date.now()+Math.floor(Math.random()*9999);
   var div=document.createElement('div');div.className='iitem';
   // 分類
-  var cw=document.createElement('div');cw.className='icat '+(o.b||'bo');
-  var cs=document.createElement('span');cs.textContent=o.e||'📌';cs.style.pointerEvents='none';
+  // Emoji 輸入框 - 可直接用手機鍵盤輸入 emoji，也保留選單
+  var cw=document.createElement('div');cw.className='icat '+(o.b||'bo');cw.style.position='relative';
+  var cs=document.createElement('input');
+  cs.className='emoji-input';
+  cs.value=o.e||'📌';
+  cs.maxLength=2;
+  cs.style.cssText='width:38px;height:38px;border:none;outline:none;background:transparent;font-size:22px;text-align:center;cursor:pointer;padding:0;font-family:inherit;';
+  cs.title='點擊選擇分類，或直接輸入 Emoji';
+  cs.addEventListener('input',function(){save();
+    // 自動套用背景色
+    var e=this.value.trim();
+    var found=CATS.find(function(c){return c.e===e;});
+    if(found)cw.className='icat '+found.b;
+  });
   var cm=document.createElement('div');cm.className='cmenu';
   CATS.forEach(function(ct){
     var op=document.createElement('div');op.className='copt';
     op.innerHTML=ct.e+'<span class="clbl">'+ct.l+'</span>';
-    op.addEventListener('click',function(e){e.stopPropagation();cs.textContent=ct.e;cw.className='icat '+ct.b;cm.classList.remove('open');save();});
-    op.addEventListener('touchend',function(e){e.preventDefault();e.stopPropagation();cs.textContent=ct.e;cw.className='icat '+ct.b;cm.classList.remove('open');save();},{passive:false});
+    function selectCat(){cs.value=ct.e;cw.className='icat '+ct.b;cm.classList.remove('open');save();}
+    op.addEventListener('click',function(e){e.stopPropagation();selectCat();});
+    op.addEventListener('touchend',function(e){e.preventDefault();e.stopPropagation();selectCat();},{passive:false});
     cm.appendChild(op);
   });
   cw.appendChild(cs);cw.appendChild(cm);
-  function toggleCM(e){e.stopPropagation();document.querySelectorAll('.cmenu').forEach(function(m){if(m!==cm)m.classList.remove('open');});cm.classList.toggle('open');}
-  cw.addEventListener('click',toggleCM);
-  cw.addEventListener('touchend',function(e){e.preventDefault();toggleCM(e);},{passive:false});
+  cs.addEventListener('focus',function(e){
+    e.stopPropagation();
+    document.querySelectorAll('.cmenu').forEach(function(m){if(m!==cm)m.classList.remove('open');});
+    cm.classList.add('open');
+  });
+  cs.addEventListener('blur',function(){setTimeout(function(){cm.classList.remove('open');},200);});
+  cw.addEventListener('click',function(e){e.stopPropagation();});
   // 欄位
   var bd=document.createElement('div');bd.className='ibody';
   [['行程',o.name||'','景點/行程名稱'],['特色',o.desc||'','備註/特色'],['時間',o.time||'','例：09:30']].forEach(function(r){
@@ -441,81 +457,35 @@ function mkItem(o){
   var l2=document.createElement('div');l2.className='exlbl';l2.textContent='交通導航';
   r2.appendChild(l2);r2.appendChild(mkMapField('輸入目的地導航',uid+'t',o.nav||''));
   ed.appendChild(r2);
-  // 拖曳把手
-  var dh=document.createElement('div');dh.className='drag-handle';dh.textContent='⠿';
-  dh.title='長按拖曳排序';
+  // 上下移動按鈕
+  var mv=document.createElement('div');mv.className='move-btns';
+  var mup=document.createElement('button');mup.className='mbtn-up';mup.textContent='▲';mup.title='往上移';
+  var mdn=document.createElement('button');mdn.className='mbtn-dn';mdn.textContent='▼';mdn.title='往下移';
+  mup.addEventListener('click',function(e){
+    e.stopPropagation();
+    var prev=div.previousElementSibling;
+    if(prev&&prev.classList.contains('iitem')){div.parentNode.insertBefore(div,prev);save();}
+  });
+  mup.addEventListener('touchend',function(e){
+    e.preventDefault();e.stopPropagation();
+    var prev=div.previousElementSibling;
+    if(prev&&prev.classList.contains('iitem')){div.parentNode.insertBefore(div,prev);save();}
+  },{passive:false});
+  mdn.addEventListener('click',function(e){
+    e.stopPropagation();
+    var next=div.nextElementSibling;
+    if(next&&next.classList.contains('iitem')){div.parentNode.insertBefore(next,div);save();}
+  });
+  mdn.addEventListener('touchend',function(e){
+    e.preventDefault();e.stopPropagation();
+    var next=div.nextElementSibling;
+    if(next&&next.classList.contains('iitem')){div.parentNode.insertBefore(next,div);save();}
+  },{passive:false});
+  mv.appendChild(mup);mv.appendChild(mdn);
 
   var tp=document.createElement('div');tp.className='itop';
-  tp.appendChild(dh);tp.appendChild(cw);tp.appendChild(bd);tp.appendChild(db);
+  tp.appendChild(mv);tp.appendChild(cw);tp.appendChild(bd);tp.appendChild(db);
   div.appendChild(tp);div.appendChild(et);div.appendChild(ed);
-
-  // 拖曳事件 - 桌面版
-  div.draggable=true;
-  div.addEventListener('dragstart',function(e){
-    dragSrc=this;
-    this.classList.add('dragging');
-    e.dataTransfer.effectAllowed='move';
-  });
-  div.addEventListener('dragend',function(){
-    this.classList.remove('dragging');
-    document.querySelectorAll('.iitem').forEach(function(el){el.classList.remove('drag-over');});
-  });
-  div.addEventListener('dragover',function(e){
-    e.preventDefault();
-    e.dataTransfer.dropEffect='move';
-    document.querySelectorAll('.iitem').forEach(function(el){el.classList.remove('drag-over');});
-    if(this!==dragSrc) this.classList.add('drag-over');
-  });
-  div.addEventListener('drop',function(e){
-    e.preventDefault();
-    if(this!==dragSrc){
-      var p=this.parentNode;
-      var items=Array.from(p.querySelectorAll('.iitem'));
-      var srcIdx=items.indexOf(dragSrc);
-      var tgtIdx=items.indexOf(this);
-      if(srcIdx<tgtIdx) p.insertBefore(dragSrc,this.nextSibling);
-      else p.insertBefore(dragSrc,this);
-      document.querySelectorAll('.iitem').forEach(function(el){el.classList.remove('drag-over');});
-      save();
-    }
-  });
-
-  // 觸控拖曳 - 手機版
-  var touchStartY=0,touchItem=null;
-  dh.addEventListener('touchstart',function(e){
-    touchItem=div;
-    touchStartY=e.touches[0].clientY;
-    div.classList.add('dragging');
-    e.preventDefault();
-  },{passive:false});
-  dh.addEventListener('touchmove',function(e){
-    if(!touchItem) return;
-    e.preventDefault();
-    var touch=e.touches[0];
-    var el=document.elementFromPoint(touch.clientX,touch.clientY);
-    var target=el?el.closest('.iitem'):null;
-    document.querySelectorAll('.iitem').forEach(function(i){i.classList.remove('drag-over');});
-    if(target&&target!==touchItem) target.classList.add('drag-over');
-  },{passive:false});
-  dh.addEventListener('touchend',function(e){
-    if(!touchItem) return;
-    var touch=e.changedTouches[0];
-    var el=document.elementFromPoint(touch.clientX,touch.clientY);
-    var target=el?el.closest('.iitem'):null;
-    if(target&&target!==touchItem){
-      var p=target.parentNode;
-      var items=Array.from(p.querySelectorAll('.iitem'));
-      var srcIdx=items.indexOf(touchItem);
-      var tgtIdx=items.indexOf(target);
-      if(srcIdx<tgtIdx) p.insertBefore(touchItem,target.nextSibling);
-      else p.insertBefore(touchItem,target);
-      save();
-    }
-    touchItem.classList.remove('dragging');
-    document.querySelectorAll('.iitem').forEach(function(i){i.classList.remove('drag-over');});
-    touchItem=null;
-  },{passive:false});
-
   return div;
 }
 
